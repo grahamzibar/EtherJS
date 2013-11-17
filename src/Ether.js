@@ -10,55 +10,19 @@
 		/_____/  \__/ /_/ /_/\___//_/    \____/  /____/
 	
 	
-	https://www.github.com/grahamzibar/etherjs
+	* https://www.github.com/grahamzibar/EtherJS
+	
+	
+	
+	* This engine was GREATLY inspired by Coffee Physics.  A very well made
+	JavaScript physics engine written with CoffeeScript.  Be sure to check-out
+	that project and show some love!
+	
+		* https://github.com/soulwire/Coffee-Physics
 
 +-----------------------------------------------------------------------------+
 */
 window.ether = new (function EtherModule() {
-	/*
-	+-------------------------------------------------------------------------+
-		
-		Random
-		
-			A static class that provides auxillary functions for
-			randomization. Not used internally but is EXTREMELY useful.
-		
-	+-------------------------------------------------------------------------+
-	*/
-	this.Random = new (function() {
-		this.range = function(min, max) {
-			if (max == null) {
-				max = min;
-				min = 0;
-			}
-			return min + Math.random() * (max - min);
-		};
-		this.int = function(min, max) {
-			if (max == null) {
-				max = min;
-				min = 0;
-			}
-			return Math.floor(min + Math.random() * (max - min));
-		};
-		this.sign = function(prob) {
-			if (prob == null)
-				prob = 0.5;
-			if (Math.random() < prob)
-				return 1;
-			return -1;
-		};
-		this.bool = function(prob) {
-			if (prob == null)
-				prob = 0.5;
-			return Math.random() < prob;
-		};
-		this.item = function(list) {
-			return list[Math.floor(Math.random() * list.length)];
-		};
-	})();
-	/**/
-	
-	
 	/*
 	+-------------------------------------------------------------------------+
 		
@@ -209,15 +173,15 @@ window.ether = new (function EtherModule() {
 	};
 	Particle.prototype.moveTo = function(pos) {
 		this.pos.copy(pos);
-		return this.old.pos.copy(pos);
+		this.old.pos.copy(pos);
 	};
 	Particle.prototype.setMass = function(mass) {
 		this.mass = mass;
-		return this.massInv = 1.0 / mass;
+		this.massInv = 1.0 / mass;
 	};
 	Particle.prototype.setRadius = function(radius) {
 		this.radius = radius;
-		return this.radiusSq = radius * radius;
+		this.radiusSq = radius * radius;
 	};
 	Particle.prototype.update = function(dt, index) {
 		if (this.fixed)
@@ -232,6 +196,7 @@ window.ether = new (function EtherModule() {
 	/**/
 	
 	
+	
 	/*
 	+-------------------------------------------------------------------------+
 		
@@ -242,58 +207,64 @@ window.ether = new (function EtherModule() {
 	+-------------------------------------------------------------------------+
 	*/
 	var Universe = this.Universe = function Universe() {
-		this.integrator = new Verlet();
-		this.timestep = 1.0 / 60;
+		var __self__ = this;
+		
+		var TIME_STEP = 0.0167; // 1 / 60 -- Should I make this more accurate?
+		var MAX_STEPS = 4;
+		
+		var _integrator = new Verlet();
+		var _time = 0.0;
+		var _clock = null;
+		var _buffer = 0.0;
+		
 		this.viscosity = 0.005;
 		this.laws = new Array();
-		this._time = 0.0;
-		this._step = 0.0;
-		this._clock = null;
-		this._buffer = 0.0;
-		this._maxSteps = 4;
 		this.particles = new Array();
-	};
-	Universe.prototype.integrate = function(dt) {
-		var drag = 1.0 - this.viscosity;
-		for (var i = 0, len = this.particle.length; i < len; i++) {
-			var particle = this.particles[i];
+		
+		// Optimize this apply to minimize for loops.
+		// We also need to create subclasses for Particle
+		
+		var apply = function(ts) {
+			var _this = __self__;
+			var drag = 1.0 - _this.viscosity;
 			
-			// Apply universe laws
-			for (var j = 0, len1 = this.laws.length; j < len1; j++) {
-				var law = this.laws[j];
-				law.apply(particle, dt, i);
+			for (var i = 0, len = _this.particle.length; i < len; i++) {
+				var particle = _this.particles[i];
+				
+				// Apply universe laws
+				for (var j = 0, len1 = this.laws.length; j < len1; j++)
+					_this.laws.apply(particle, ts, i);
+				
+				// Apply particle behaviours
+				particle.update(ts, i);
 			}
 			
-			// Apply particle behaviours
-			particle.update(dt, i);
-		}
+			// Then we use some physics
+			_integrator.integrate(_this.particles, dt, drag);
+		};
 		
-		// Then we use some physics
-		this.integrator.integrate(this.particles, dt, drag);
+		this.step = function() {
+			if (!_clock)
+				_clock = (new Date()).getTime();
+			
+			var time = new Date().getTime();
+			var delta = time - this._clock;
+			if (delta <= 0.0)
+				return;
+			
+			delta *= 0.001;
+			_clock = time;
+			_buffer += delta;
+			
+			var i = 0;
+			while (_buffer >= TIME_STEP && ++i < MAX_STEPS) {
+				apply(TIME_STEP);
+				_buffer -= TIME_STEP;
+				_time += TIME_STEP;
+			}
+		};
 	};
-	Universe.prototype.step = function() {
-		var delta, i, time, _ref;
-		
-		if ((_ref = this._clock) == null)
-			this._clock = new Date().getTime();
-		
-		time = new Date().getTime();
-		delta = time - this._clock;
-		if (delta <= 0.0)
-			return;
-		
-		delta *= 0.001;
-		this._clock = time;
-		this._buffer += delta;
-		i = 0;
-		while (this._buffer >= this.timestep && ++i < this._maxSteps) {
-			this.integrate(this.timestep);
-			this._buffer -= this.timestep;
-			this._time += this.timestep;
-		}
-		
-		return this._step = new Date().getTime() - time;
-	};
+	/**/
 	
 	
 	
@@ -342,15 +313,24 @@ window.ether = new (function EtherModule() {
 		
 	+-------------------------------------------------------------------------+
 	*/
-	this.DOMUniverse = function DOMUniverse(_container) {
+	var DOMUniverse = this.DOMUniverse = function DOMUniverse(_container) {
 		this.inheritFrom = Universe;
 		this.inheritFrom();
 		delete this.inheritFrom;
 		
 		var __self__ = this;
 		
+		// Override step to also perform a render
+		
 		this.render = function(particle) {
-			
+			var transform = 'translate3d(';
+			transform += particle.pos.x | 0;
+			transform += 'px, ';
+			transform += particle.pos.y | 0;
+			transform += 'px, 0px) rotate(';
+			transform += particle.rotation;
+			transform += 'rad)';
+			p.domElement.style.WebkitTransform = transform;
 		};
 		
 		this.renderAll = function() {
@@ -372,4 +352,4 @@ window.ether = new (function EtherModule() {
 	|___|
 
 +-----------------------------------------------------------------------------+
- */
+*/
