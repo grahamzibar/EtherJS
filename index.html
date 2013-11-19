@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    
+    <style type="text/css">
+	<!--
+		body {
+			background-color:#201c37;
+			padding:0;
+			margin:0;
+			overflow:hidden;
+		}
+		
+		#cosmos {
+			position:absolute;
+			top:0;
+			left:0;
+			width:100%;
+			height:100%;
+		}
+		
+		#cosmos span {
+			position:absolute;
+			background-color:#e5e5e5;
+			display:block;
+			border-radius:50%;
+			opacity:0.85;
+		}
+	-->
+    </style>
+</head>
+<body>
+	<div id="cosmos">
+		
+	</div>
+    
+    <script type="text/javascript" src="src/Ether.js"></script>
+    <script type="text/javascript" src="src/extra/laws/Gravity.js"></script>
+    <script type="text/javascript" src="src/extra/laws/Bounds.js"></script>
+    <script type="text/javascript" src="src/extra/Random.js"></script>
+    <script type="text/javascript">
+	<!--
+		
+		var GRAVITY = 1.15; // 1.15 pixels per step per step
+		var BOUNCE = 0.75; // 50%
+		
+		var _realm = document.getElementById('cosmos');
+		var _cosmos = new ether.DOMUniverse(_realm);
+		var _min = new ether.Vector(0, 0);
+		var _max = new ether.Vector(window.innerWidth, window.innerHeight);
+		var _render = true;
+		
+		_cosmos.laws = [new ether.laws.Gravity(new ether.Vector(0, GRAVITY, 0))];
+		
+		var onParticleRemove = function() {
+			this.display.parent.removeChild(this.display);
+		};
+		
+		var createParticle = function() {
+			var particle = new ether.Particle(Math.rand_utils.range(1.5, 3.0)); // heavy!
+			particle.setRadius(Math.rand_utils.range(10, 40) * particle.mass);
+			
+			particle.laws = [new ether.laws.Bounds(_min, _max, BOUNCE)];
+			
+			var el = document.createElement('span');
+			var diameter = particle.radius + particle.radius;
+			var css = 'width:';
+			css += diameter;
+			css += 'px; height:';
+			css += diameter;
+			css += 'px; top:-';
+			css += particle.radius;
+			css += 'px; left:-';
+			css += particle.radius;
+			css += 'px;';
+			el.style.cssText = css;
+			
+			particle.moveTo(new ether.Vector((window.innerWidth - particle.radius) / 2, particle.radius));
+			_cosmos.particles.push(particle);
+			particle.display = el;
+			_realm.appendChild(el);
+			
+			particle.onremove = onParticleRemove;
+		};
+		
+		var step = function() {
+			_cosmos.step();
+			if (_animate)
+				window.webkitRequestAnimationFrame(step);
+		};
+		
+		var start = function() {
+			_animate = true;
+			step();
+		};
+		
+		var stop = function() {
+			_animate = false;
+			step();
+		};
+		
+		var resize = function() {
+			_max.x = window.innerWidth;
+			_max.y = window.innerHeight;
+		};
+		
+		start();
+		window.addEventListener('resize', resize);
+		
+	//-->
+    </script>
+</body>
+</html>

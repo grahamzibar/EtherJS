@@ -10,9 +10,8 @@
 		/_____/  \__/ /_/ /_/\___//_/    \____/  /____/
 	
 	
+	* version 0.1.1 - ALPHA
 	* https://www.github.com/grahamzibar/EtherJS
-	
-	
 	
 	* This engine was GREATLY inspired by Coffee Physics.  A very well made
 	JavaScript physics engine written with CoffeeScript.  Be sure to check-out
@@ -33,9 +32,10 @@ window.ether = new (function EtherModule() {
 		
 	+-------------------------------------------------------------------------+
 	*/
-	var Vector = this.Vector = function Vector(_x, _y) {
+	var Vector = this.Vector = function Vector(_x, _y, _z) {
 		_x = _x != null ? _x : 0.0;
 		_y = _y != null ? _y : 0.0;
+		_z = _z != null ? _z : 0.0;
 		
 		this.__defineGetter__('x', function() {
 			return _x;
@@ -43,98 +43,108 @@ window.ether = new (function EtherModule() {
 		this.__defineGetter__('y', function() {
 			return _y;
 		});
+		this.__defineGetter__('z', function() {
+			return _z;
+		});
 		this.__defineSetter__('x', function(x) {
 			_x = x;
 		});
 		this.__defineSetter__('y', function(y) {
 			_y = y;
 		});
-		
-		this.set = function(x, y) {
-			_x = x;
-			_y = y;
-		};
+		this.__defineSetter__('z', function(z) {
+			_z = z;
+		});
 		
 		this.add = function(v) {
 			_x += v.x;
 			_y += v.y;
+			_z += v.z;
 		};
 
 		this.sub = function(v) {
 			_x -= v.x;
 			_y -= v.y;
+			_z -= v.z;
 		};
 
 		this.scale = function(f) {
 			_x *= f;
 			_y *= f;
+			_z *= f;
 		};
 		
 		this.dot = function(v) {
-			return _x * v.x + _y * v.y;
+			return _x * v.x + _y * v.y + _z * v.z;
 		};
 		
 		this.cross = function(v) {
-			// Shouldn't this ALSO have direction?
-			return (_x * v.y) - (_y * v.x);
+			return _x * v.y - _y * v.x - _z * v.z;
 		};
 		
 		this.mag = function() {
-			return Math.sqrt(_x * _x + _y * _y);
+			return Math.sqrt(_x * _x + _y * _y + _z * _z);
 		};
 		
 		this.magSq = function() {
-			return _x * _x + _y * _y;
+			return _x * _x + _y * _y + _z * _z;
 		};
 		
 		this.dist = function(v) {
 			var dx = v.x - _x;
 			var dy = v.y - _y;
-			return Math.sqrt(dx * dx + dy * dy);
+			var dz = v.z - _z;
+			return Math.sqrt(dx * dx + dy * dy + dz * dz);
 		};
 		
 		this.distSq = function(v) {
 			var dx = v.x - _x;
 			var dy = v.y - _y;
-			return dx * dx + dy * dy;
+			var dz = v.z - _z;
+			return dx * dx + dy * dy + dz * dz;
 		};
 		
 		this.norm = function() {
-			var m = Math.sqrt(_x * _x + _y * _y);
+			var m = Math.sqrt(_x * _x + _y * _y + _z * _z);
 			_x /= m;
 			_y /= m;
+			_z /= m;
 		};
 		
 		this.limit = function(l) {
-			var mSq = _x * _x + _y * _y;
+			var mSq = _x * _x + _y * _y + _z * _z;
 			if (mSq > l * l) {
 				var m = Math.sqrt(mSq);
 				_x /= m;
 				_y /= m;
+				_z /= m;
 				_x *= l;
 				_y *= l;
+				_z *= l;
 			}
 		};
 		
 		this.copy = function(v) {
 			_x = v.x;
 			_y = v.y;
+			_z = v.z;
 		};
 		
 		this.clone = function() {
-			return new Vector(_x, _y);
+			return new Vector(_x, _y, _z);
 		};
 		
 		this.clear = function() {
 			_x = 0.0;
 			_y = 0.0;
+			_z = 0.0;
 		};
 	};
 	Vector.add = function(v1, v2) {
-		return new Vector(v1.x + v2.x, v1.y + v2.y);
+		return new Vector(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
 	};
 	Vector.sub = function(v1, v2) {
-		return new Vector(v1.x - v2.x, v1.y - v2.y);
+		return new Vector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
 	};
 	Vector.project = function(v1, v2) {
 		return v1.clone().scale((v1.dot(v2)) / v1.magSq());
@@ -153,23 +163,33 @@ window.ether = new (function EtherModule() {
 	+-------------------------------------------------------------------------+
 	*/
 	var Particle = this.Particle = function Particle(_mass) {
+		var __self__ = this;
+		
 		this.mass = _mass != null ? _mass : 1.0;
 		this.massInv = 1.0 / this.mass;
-		this.id = 'p' + Particle.GUID++;
+		
+		this.display = null;
+		
+		// Currently, particles can ONLY be spheres. This needs to be changed
+		// Particles should have their own function that specifies if it's
+		// within the bounds of another particle. That could get messy.
 		this.radius = 1.0;
 		this.radiusSq = 1.0;
 		this.fixed = false;
+		this.rotate = false;
+		this.remove = false;
+		
 		this.laws = new Array();
 		this.pos = new Vector();
 		this.vel = new Vector();
 		this.acc = new Vector();
-		this.rotate = false;
-		this.rotation = 0.0;
+		// Should we devise a better we to store old?
 		this.old = {
 			pos: new Vector(),
 			vel: new Vector(),
 			acc: new Vector()
 		};
+		this.rotation = 0.0; // Change to a vector
 	};
 	Particle.prototype.moveTo = function(pos) {
 		this.pos.copy(pos);
@@ -187,14 +207,17 @@ window.ether = new (function EtherModule() {
 		if (this.fixed)
 			return;
 			
-		for (_i = 0, _len = _ref.length; _i < _len; _i++)
-			this.laws[i].apply(this, dt, index);
+		for (var i = 0, len = this.laws.length; i < len; i++)
+			this.laws[i].enforce(this, dt, index);
 		
+		// This is NOT how it works -- MUST CHANGE
 		if (this.rotate)
-			this.rotation = (this.pos.x / this.radius); // This is NOT how it works
+			this.rotation = (this.pos.x / this.radius);
+	};
+	Particle.prototype.onremove = function() {
+		//
 	};
 	/**/
-	
 	
 	
 	/*
@@ -209,10 +232,9 @@ window.ether = new (function EtherModule() {
 	var Universe = this.Universe = function Universe() {
 		var __self__ = this;
 		
-		var TIME_STEP = 0.0167; // 1 / 60 -- Should I make this more accurate?
+		var TIME_STEP = 0.0167; // 1 / 60
 		var MAX_STEPS = 4;
 		
-		var _integrator = new Verlet();
 		var _time = 0.0;
 		var _clock = null;
 		var _buffer = 0.0;
@@ -221,26 +243,44 @@ window.ether = new (function EtherModule() {
 		this.laws = new Array();
 		this.particles = new Array();
 		
-		// Optimize this apply to minimize for loops.
-		// We also need to create subclasses for Particle
-		
 		var apply = function(ts) {
 			var _this = __self__;
+			var tsSq = ts * ts;
 			var drag = 1.0 - _this.viscosity;
 			
-			for (var i = 0, len = _this.particle.length; i < len; i++) {
+			for (var i = 0, len = _this.particles.length; i < len; i++) {
 				var particle = _this.particles[i];
 				
-				// Apply universe laws
-				for (var j = 0, len1 = this.laws.length; j < len1; j++)
-					_this.laws.apply(particle, ts, i);
+				for (var j = 0, len1 = _this.laws.length; j < len1; j++)
+					_this.laws[j].enforce(particle, ts, i);
 				
-				// Apply particle behaviours
+				if (particle.remove) {
+					_this.particles.splice(i, 1);
+					particle.onremove.call(particle);
+					i -= 1;
+					continue;
+				}
+				
 				particle.update(ts, i);
+				integrate(particle, ts, tsSq, drag);
+				_this.render(particle, i);
 			}
+		};
+		
+		var integrate = function(p, dt, dtSq, drag) {
+			if (!(!p.fixed))
+				return;
 			
-			// Then we use some physics
-			_integrator.integrate(_this.particles, dt, drag);
+			p.acc.scale(p.massInv);
+			//p.vel.copy(p.pos);
+			//p.vel.sub(p.old.pos);
+			if (drag)
+				p.vel.scale(drag);
+			
+			p.old.pos.copy(p.pos);
+			p.acc.scale(dtSq);
+			p.vel.add(p.acc);
+			p.pos.add(p.vel);
 		};
 		
 		this.step = function() {
@@ -248,7 +288,8 @@ window.ether = new (function EtherModule() {
 				_clock = (new Date()).getTime();
 			
 			var time = new Date().getTime();
-			var delta = time - this._clock;
+			var delta = time - _clock;
+			
 			if (delta <= 0.0)
 				return;
 			
@@ -263,44 +304,17 @@ window.ether = new (function EtherModule() {
 				_time += TIME_STEP;
 			}
 		};
-	};
-	/**/
-	
-	
-	
-	/*
-	+-------------------------------------------------------------------------+
 		
-		Verlet
+		this.render = function(particle) {
+		};
 		
-			Simulates Newton's laws of motion.  True story.
-		
-	+-------------------------------------------------------------------------+
-	*/
-	var Verlet = function Verlet() {
-		this.integrate = function(particles, dt, drag) {
-			var pos = new Vector();
-			var dtSq = dt * dt;
-			
-			for (var i = 0, len = particles.length; i < len; i++) {
-				var p = particles[i];
-				if (!(!p.fixed))
-					continue;
-				
-				p.acc.scale(p.massInv);
-				p.vel.copy(p.pos).sub(p.old.pos);
-				if (drag)
-					p.vel.scale(drag);
-				
-				pos.copy(p.pos).add(p.vel.add(p.acc.scale(dtSq)));
-				p.old.pos.copy(p.pos);
-				p.pos.copy(pos);
-			}
+		this.renderAll = function() {
+			var _this = __self__;
+			for (var i = 0, parts = _this.particles, len = parts.length; i < len; i++)
+				_this.render(parts[i]);
 		};
 	};
 	/**/
-	
-	
 	
 	
 	/*
@@ -318,25 +332,17 @@ window.ether = new (function EtherModule() {
 		this.inheritFrom();
 		delete this.inheritFrom;
 		
-		var __self__ = this;
-		
-		// Override step to also perform a render
-		
 		this.render = function(particle) {
 			var transform = 'translate3d(';
-			transform += particle.pos.x | 0;
+			transform += Math.floor(particle.pos.x);
 			transform += 'px, ';
-			transform += particle.pos.y | 0;
-			transform += 'px, 0px) rotate(';
+			transform += Math.floor(particle.pos.y);
+			transform += 'px, ';
+			transform += Math.floor(particle.pos.z);
+			transform += 'px) rotate(';
 			transform += particle.rotation;
 			transform += 'rad)';
-			p.domElement.style.WebkitTransform = transform;
-		};
-		
-		this.renderAll = function() {
-			var _this = __self__;
-			for (var i = 0, parts = _this.particles, len = parts.length; i < len; i++)
-				_this.render(parts[i]);
+			particle.display.style.WebkitTransform = transform;
 		};
 	};
 	/**/
