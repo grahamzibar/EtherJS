@@ -26,7 +26,6 @@
 			background-color:#e5e5e5;
 			display:block;
 			border-radius:50%;
-			opacity:0.85;
 		}
 	-->
     </style>
@@ -38,6 +37,7 @@
     
     <script type="text/javascript" src="src/Ether.js"></script>
     <script type="text/javascript" src="src/extra/laws/Gravity.js"></script>
+    <script type="text/javascript" src="src/extra/laws/Collision.js"></script>
     <script type="text/javascript" src="src/extra/laws/Bounds.js"></script>
     <script type="text/javascript" src="src/extra/Random.js"></script>
     <script type="text/javascript">
@@ -48,11 +48,16 @@
 		
 		var _realm = document.getElementById('cosmos');
 		var _cosmos = new ether.DOMUniverse(_realm);
+		var _gravity = new ether.laws.Gravity(new ether.Vector(0, GRAVITY, 0))
+		var _collision = new ether.laws.Collision(_cosmos.particles);
 		var _min = new ether.Vector(0, 0);
 		var _max = new ether.Vector(window.innerWidth, window.innerHeight);
 		var _render = true;
 		
-		_cosmos.laws = [new ether.laws.Gravity(new ether.Vector(0, GRAVITY, 0))];
+		_cosmos.laws = [
+			_gravity,
+			_collision
+		];
 		
 		var onParticleRemove = function() {
 			this.display.parent.removeChild(this.display);
@@ -60,7 +65,7 @@
 		
 		var createParticle = function() {
 			var particle = new ether.Particle(Math.rand_utils.range(1.5, 3.0)); // heavy!
-			particle.setRadius(Math.rand_utils.range(10, 40) * particle.mass);
+			particle.setRadius(Math.rand_utils.range(40, 80) * particle.mass);
 			
 			particle.laws = [new ether.laws.Bounds(_min, _max, BOUNCE)];
 			

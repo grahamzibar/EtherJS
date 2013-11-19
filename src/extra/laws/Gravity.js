@@ -3,9 +3,8 @@ if (!window.ether.laws)
 
 ether.laws.Gravity = function Gravity(_acc) {
 	
-	this.enforce = function(p, dt, index) {
+	this.enforce = function(p) {
 		p.vel.add(_acc);
-		//p.pos.y += _acc.y;
 	};
 	
 };
