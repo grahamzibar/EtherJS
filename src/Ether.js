@@ -253,15 +253,17 @@ window.ether = new (function EtherModule() {
 				
 				for (var j = 0, len1 = _this.laws.length; j < len1; j++)
 					_this.laws[j].enforce(particle, ts, i);
+					
+				particle.update(ts, i);
 				
 				if (particle.remove) {
 					_this.particles.splice(i, 1);
 					particle.onremove.call(particle);
+					len -= 1;
 					i -= 1;
 					continue;
 				}
 				
-				particle.update(ts, i);
 				integrate(particle, ts, tsSq, drag);
 				_this.render(particle, i);
 			}
