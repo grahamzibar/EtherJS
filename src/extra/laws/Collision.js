@@ -14,19 +14,19 @@ ether.laws.Collision.prototype.enforce = function(p1, dt, index) {
 		delta.sub(p1.pos);
 		var distSq = delta.magSq();
 		var radii = p1.radius + p2.radius;
-		
-		if (distSq > radii * radii)
+
+		if (distSq > radii * radii + 0.5)
 			continue;
-		
+
 		// Change the following?
-		var overlap = radii - Math.sqrt(distSq);
+		var overlap = (radii - Math.sqrt(distSq) + 0.5) * 0.25;
 		var mass = p1.mass + p2.mass;
 		delta.norm();
-		
+
 		var delta2 = delta.clone();
-		delta2.scale(overlap * -p2.mass / mass);
+		delta2.scale(-overlap * p2.mass / mass);
 		p1.vel.add(delta2);
-		
+
 		delta.scale(overlap * p1.mass / mass);
 		p2.vel.add(delta);
 	}
