@@ -1,18 +1,17 @@
 >	@grahamzibar presents:
->	
+>	```
 >	____________________             ________________
 >	___  ____/_  /___  /___________________  /_  ___/
->	__  __/  _  __/_  __ \  _ \_  ___/__ _  /_____ \ 
->	_  /___  / /_ _  / / /  __/  /   / /_/ / ____/ / 
+>	__  __/  _  __/_  __ \  _ \_  ___/__ _  /_____ \
+>	_  /___  / /_ _  / / /  __/  /   / /_/ / ____/ /
 >	/_____/  \__/ /_/ /_/\___//_/    \____/  /____/
->
->	* version 0.1.1 - ALPHA
->	* https://www.github.com/grahamzibar/EtherJS
->
->	* This engine was GREATLY inspired by Coffee Physics.  
->		A very well made JavaScript physics engine written  
->		with CoffeeScript.  Be sure to check-out that  
->		project and show some love!
+>	
+>	```
+
+* version 0.1.1 - ALPHA
+* https://www.github.com/grahamzibar/EtherJS
+* This engine was GREATLY inspired by Coffee Physics.  A very well made JavaScript physics engine written with CoffeeScript.  Be sure to check-out that project and show some love!
+  + https://github.com/soulwire/Coffee-Physics
 
 
 ## A (good) JavaScript physics library.
@@ -48,17 +47,22 @@ Included in the project is a `DOMUniverse` class.  I'll show you how I made it:
 1. Create the class
    ```
    ether.DOMUniverse = function DOMUniverse() {
+   	// Hello world
+   	// :)
    };
+
    ```
 2. Inherit from `Universe`
    ```
    ether.DOMUniverse = function DOMUniverse() {
-   		this.inheritFrom = ether.Universe;
-   		this.inheritFrom();
-   		delete this.inheritFrom;
+   	this.inheritFrom = ether.Universe;
+   	this.inheritFrom();
+   	delete this.inheritFrom;
+	
+	// Yeahh!!
    };
    ```
-3. Add a parameter which is intended to receive a DOM element as the argument
+3. Add a parameter which is intended to receive a DOM element as the argument  
    ```
    ether.DOMUniverse = function DOMUniverse(_container) {
    		this.inheritFrom = ether.Universe;
@@ -69,30 +73,30 @@ Included in the project is a `DOMUniverse` class.  I'll show you how I made it:
    		// We save this to the display property inherited from ether.Universe
    };
    ```
-4. Implement the render function inherited from `ether.Universe`
-```
-ether.DOMUniverse = function DOMUniverse(_container) {
-		this.inheritFrom = ether.Universe;
-		this.inheritFrom();
-		delete this.inheritFrom;
-		
-		this.display = _container;
-		
-		// We render this one particle at a time.
-		this.render = function(particle) {
-			var transform = 'translate3d(';
-			transform += Math.floor(particle.pos.x);
-			transform += 'px, ';
-			transform += Math.floor(particle.pos.y);
-			transform += 'px, ';
-			transform += Math.floor(particle.pos.z);
-			transform += 'px) rotate(';
-			transform += particle.rotation;
-			transform += 'rad)';
-			particle.display.style.WebkitTransform = transform;
-		};
-};
-```
+4. Implement the render function inherited from `ether.Universe`  
+   ```
+   ether.DOMUniverse = function DOMUniverse(_container) {
+	this.inheritFrom = ether.Universe;
+	this.inheritFrom();
+	delete this.inheritFrom;
+	
+	this.display = _container;
+	
+	// We render this one particle at a time.
+	this.render = function(particle) {
+		var transform = 'translate3d(';
+		transform += Math.floor(particle.pos.x);
+		transform += 'px, ';
+		transform += Math.floor(particle.pos.y);
+		transform += 'px, ';
+		transform += Math.floor(particle.pos.z);
+		transform += 'px) rotate(';
+		transform += particle.rotation;
+		transform += 'rad)';
+		particle.display.style.WebkitTransform = transform;
+	};
+   };
+   ```
 
 And that's how we create a universe!  The `render` function handles the
 rendering of the position and rotation of a particle and we handle it one
